@@ -11,24 +11,22 @@ This app visualizes the progression of the Spanish Civil War (1936-1938) on a ma
 Use the slider to explore daily changes during the war.
 """)
 
-# Load data
-@st.cache
+# Load event data
+@st.cache_data
 def load_data():
-    # Example dataset: Replace with actual war data (CSV with lat, lon, and event details)
+    # Example dataset: Replace with actual war data
+    # The dataset should include date, location (lat/lon), type of event, and descriptions
     data = pd.read_csv("spanish_civil_war_data.csv")
     return data
 
-# GeoPandas: Load shapefile (replace with actual shapefile of Spain, if necessary)
-@st.cache
+# Load geospatial data (shapefile)
+@st.cache_data
 def load_shapefile():
-    shapefile_path = "path_to_shapefile/spain_boundaries.shp"  # Replace with correct path
+    shapefile_path = "data/spain_boundaries.shp"  # Update path to your shapefile
     gdf = gpd.read_file(shapefile_path)
     return gdf
 
-# Load geospatial data
-gdf = load_shapefile()
-
-# Load event data
+# Load the data
 data = load_data()
 
 # Select a date to view
@@ -38,20 +36,14 @@ selected_date = st.slider("Select a date", min_date, max_date, min_date)
 # Filter data by selected date
 filtered_data = data[data["date"] == selected_date.strftime("%Y-%m-%d")]
 
+# Load the shapefile (geospatial data)
+gdf = load_shapefile()
+
 # Map initialization
 m = folium.Map(location=[40.0, -3.7], zoom_start=6)
 
-# Add Spain boundaries from shapefile (GeoPandas)
-folium.GeoJson(
-    gdf.to_crs("EPSG:4326"),  # Ensure the coordinate reference system is correct
-    name="Spain Boundaries",
-    style_function=lambda x: {
-        "fillColor": "green",
-        "color": "black",
-        "weight": 0.5,
-        "fillOpacity": 0.2,
-    },
-).add_to(m)
+# Add the shapefile data (boundaries of Spain)
+folium.GeoJson(gdf).add_to(m)
 
 # Add events to the map
 for _, row in filtered_data.iterrows():
@@ -61,7 +53,7 @@ for _, row in filtered_data.iterrows():
         icon=folium.Icon(color="red" if row["side"] == "Republican" else "blue")
     ).add_to(m)
 
-# Render map in Streamlit
+# Render map
 st_data = st_folium(m, width=700, height=500)
 
 # Sidebar information
